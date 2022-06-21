@@ -5,30 +5,42 @@
         <div class="formula__wrap">
           <p class="formula">{{ formula }}</p>
         </div>
-        <input class="input" v-model="result" placeholder="0" />
+        <input
+          class="input"
+          v-model="result"
+          placeholder="0"
+          @keydown.esc="clear()"
+        />
         <div class="btns__top">
-          <button
+          <div
             class="btns btns__op"
-            v-for="operation in operationsTop"
-            :key="operation"
+            v-for="n in operationsTop"
+            :key="n"
+            @click="action(n)"
           >
-            {{ operation }}
-          </button>
+            {{ n }}
+          </div>
         </div>
         <div class="btns__bot-wrap">
-          <div class="btns__bot-left ">
-            <button class="btns btns__n" v-for="number in numbers" :key="number">
-              {{ number }}
-            </button>
+          <div class="btns__bot-left">
+            <div
+              class="btns btns__n"
+              v-for="n in numbers"
+              :key="n"
+              @click="action(n)"
+            >
+              {{ n }}
+            </div>
           </div>
           <div class="btns__bot-right">
-            <button
+            <div
               class="btns btns__op"
-              v-for="operation in operationsBottom"
-              :key="operation"
+              v-for="n in operationsBottom"
+              :key="n"
+              @click="action(n)"
             >
-              {{ operation }}
-            </button>
+              {{ n }}
+            </div>
           </div>
         </div>
       </div>
@@ -42,20 +54,122 @@ export default {
     return {
       result: "",
       formula: "",
-      numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3, "00", 0, ","],
+      numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3, "00", 0, "."],
       operationsTop: ["C", "√", "%", "/"],
-      operationsBottom: ["×", "-", "+", "="],
+      operationsBottom: ["*", "-", "+", "="],
+      operator: "",
+      previousValue: 0,
     };
   },
 
   methods: {
-    action(b) {
-      if (b === 'C') {
-        this.result = '';
-        this.formula = '';
+    clear() {
+      this.result = "";
+      this.formula = "";
+      this.operator = "";
+      this.previousValue = 0;
+    },
+
+    action(n) {
+      if (n === "C") {
+        this.clear();
+      }
+
+      if (!isNaN(n) || n === ".") {
+        this.result += n;
+      }
+
+      if (n === "%") {
+        this.result = this.result / 100;
+      }
+
+      if (n === "√") {
+        this.result = Math.sqrt(this.result);
+      }
+
+      if (["/", "*", "-", "+"].includes(n)) {
+        if (
+          this.result.length > 0 &&
+          this.formula.length === 0 &&
+          this.result !== "-"
+        ) {
+          this.previousValue = this.result;
+          this.operator = n;
+          this.formula = this.result + " " + n;
+          this.result = "";
+        } else if (this.result.length > 0 && this.formula.length > 0) {
+          if (this.operator === "/") {
+            this.formula = this.formula + " " + this.result + " " + n;
+            this.previousValue =
+              parseFloat(this.previousValue) / parseFloat(this.result);
+            this.operator = n;
+            this.result = "";
+          }
+
+          if (this.operator === "*") {
+            this.formula = this.formula + " " + this.result + " " + n;
+            this.previousValue =
+              parseFloat(this.previousValue) * parseFloat(this.result);
+            this.operator = n;
+            this.result = "";
+          }
+
+          if (this.operator === "-") {
+            this.formula = this.formula + " " + this.result + " " + n;
+            this.previousValue =
+              parseFloat(this.previousValue) - parseFloat(this.result);
+            this.operator = n;
+            this.result = "";
+          }
+
+          if (this.operator === "+") {
+            this.formula = this.formula + " " + this.result;
+            this.previousValue =
+              parseFloat(this.previousValue) + parseFloat(this.result);
+            this.operator = n;
+            this.result = "";
+          }
+        } else if (n === "-" && this.result.length === 0) {
+          this.result += n;
+        } else if (this.result.length === 0 && this.formula.length > 0) {
+          this.operator = "";
+        }
+      }
+
+      if (n === "=" && this.result.length > 0) {
+        this.formula = this.formula + " " + this.result + " " + "=";
+
+        if (this.operator === "/") {
+          this.result =
+            parseFloat(this.previousValue) / parseFloat(this.result);
+        }
+
+        if (this.operator === "*") {
+          this.result =
+            parseFloat(this.previousValue) * parseFloat(this.result);
+        }
+
+        if (this.operator === "-") {
+          this.result =
+            parseFloat(this.previousValue) - parseFloat(this.result);
+        }
+
+        if (this.operator === "+") {
+          this.result =
+            parseFloat(this.previousValue) + parseFloat(this.result);
+        }
+
+        this.operator = "";
+        this.previousValue = 0;
+      }
+
+      if (n === "=" && this.result.length === 0) {
+        this.formula = this.formula.split(" ").slice(0, -1).join(" ") + "=";
+        this.operator = "";
+        this.result = this.previousValue;
       }
     },
-  }
+  },
 };
 </script>
 
@@ -134,7 +248,7 @@ export default {
 }
 
 .btns__op:hover {
-  color: #2B589A;
+  color: #2b589a;
   background: rgb(255, 255, 255, 0.8);
 }
 
