@@ -58,7 +58,7 @@ export default {
       operationsTop: ["C", "√", "%", "/"],
       operationsBottom: ["*", "-", "+", "="],
       operator: "",
-      previousValue: 0,
+      previousValue: "",
     };
   },
 
@@ -67,7 +67,7 @@ export default {
       this.result = "";
       this.formula = "";
       this.operator = "";
-      this.previousValue = 0;
+      this.previousValue = "";
     },
 
     action(n) {
@@ -75,8 +75,18 @@ export default {
         this.clear();
       }
 
-      if (!isNaN(n) || n === ".") {
+      if (
+        !isNaN(n) ||
+        (n === "." && this.result.length > 0 && this.result !== "-")
+      ) {
         this.result += n;
+      }
+
+      if (
+        (n === "." && this.result.length === 0) ||
+        (n === "." && this.result === "-")
+      ) {
+        this.result += 0 + n;
       }
 
       if (n === "%") {
@@ -93,77 +103,69 @@ export default {
           this.formula.length === 0 &&
           this.result !== "-"
         ) {
-          this.previousValue = this.result;
+          this.previousValue = parseFloat(this.result);
           this.operator = n;
-          this.formula = this.result + " " + n;
+          this.formula = this.result + "" + n;
           this.result = "";
         } else if (this.result.length > 0 && this.formula.length > 0) {
           if (this.operator === "/") {
-            this.formula = this.formula + " " + this.result + " " + n;
             this.previousValue =
               parseFloat(this.previousValue) / parseFloat(this.result);
+            this.formula = this.formula + "" + this.result + "" + n;
             this.operator = n;
             this.result = "";
-          }
-
-          if (this.operator === "*") {
-            this.formula = this.formula + " " + this.result + " " + n;
+          } else if (this.operator === "*") {
             this.previousValue =
               parseFloat(this.previousValue) * parseFloat(this.result);
+            this.formula = this.formula + "" + this.result + "" + n;
             this.operator = n;
             this.result = "";
-          }
-
-          if (this.operator === "-") {
-            this.formula = this.formula + " " + this.result + " " + n;
+          } else if (this.operator === "-") {
             this.previousValue =
               parseFloat(this.previousValue) - parseFloat(this.result);
+            this.formula = this.formula + "" + this.result + "" + n;
             this.operator = n;
             this.result = "";
-          }
-
-          if (this.operator === "+") {
-            this.formula = this.formula + " " + this.result;
+          } else if (this.operator === "+") {
             this.previousValue =
               parseFloat(this.previousValue) + parseFloat(this.result);
+            this.formula = this.formula + "" + this.result + "" + n;
             this.operator = n;
             this.result = "";
           }
-        } else if (n === "-" && this.result.length === 0) {
+        } else if (
+          n === "-" &&
+          this.result.length === 0 &&
+          this.formula.length === 0
+        ) {
           this.result += n;
         } else if (this.result.length === 0 && this.formula.length > 0) {
-          this.operator = "";
+          return;
         }
       }
 
-      if (n === "=" && this.result.length > 0) {
-        this.formula = this.formula + " " + this.result + " " + "=";
+      if (n === "=" && this.result.length > 0 && this.result !== "-") {
+        this.formula = this.formula + "" + this.result + "" + "=";
 
         if (this.operator === "/") {
           this.result =
             parseFloat(this.previousValue) / parseFloat(this.result);
-        }
-
-        if (this.operator === "*") {
+        } else if (this.operator === "*") {
           this.result =
             parseFloat(this.previousValue) * parseFloat(this.result);
-        }
-
-        if (this.operator === "-") {
+        } else if (this.operator === "-") {
           this.result =
             parseFloat(this.previousValue) - parseFloat(this.result);
-        }
-
-        if (this.operator === "+") {
+        } else if (this.operator === "+") {
           this.result =
             parseFloat(this.previousValue) + parseFloat(this.result);
         }
 
         this.operator = "";
-        this.previousValue = 0;
+        this.previousValue = "";
       }
 
-      if (n === "=" && this.result.length === 0) {
+      if (n === "=" && this.result.length === 0 && this.formula.length > 0) {
         this.formula = this.formula.split(" ").slice(0, -1).join(" ") + "=";
         this.operator = "";
         this.result = this.previousValue;
