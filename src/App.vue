@@ -10,6 +10,8 @@
           v-model="result"
           placeholder="0"
           @keydown.esc="clear()"
+          @keydown.enter="action('=')"
+          autofocus
         />
         <div class="btns__top">
           <div
@@ -80,9 +82,7 @@ export default {
         (n === "." && this.result.length > 0 && this.result !== "-")
       ) {
         this.result += n;
-      }
-
-      if (
+      } else if (
         (n === "." && this.result.length === 0) ||
         (n === "." && this.result === "-")
       ) {
@@ -90,11 +90,19 @@ export default {
       }
 
       if (n === "%") {
-        this.result = this.result / 100;
+        if (this.result.length === 0 || this.result === "-") {
+          return;
+        } else {
+          this.result = this.result / 100;
+        }
       }
 
       if (n === "√") {
-        this.result = Math.sqrt(this.result);
+        if (this.result.length === 0 || this.result === "-") {
+          return;
+        } else {
+          this.result = Math.sqrt(this.result);
+        }
       }
 
       if (["/", "*", "-", "+"].includes(n)) {
@@ -163,9 +171,11 @@ export default {
 
         this.operator = "";
         this.previousValue = "";
-      }
-
-      if (n === "=" && this.result.length === 0 && this.formula.length > 0) {
+      } else if (
+        n === "=" &&
+        this.result.length === 0 &&
+        this.formula.length > 0
+      ) {
         this.formula = this.formula.split(" ").slice(0, -1).join(" ") + "=";
         this.operator = "";
         this.result = this.previousValue;
@@ -243,6 +253,7 @@ export default {
   line-height: 80px;
   text-align: center;
   transition: all ease-in 0.2s;
+  cursor: pointer;
 }
 
 .btns__n:hover {
